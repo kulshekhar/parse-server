@@ -55,6 +55,7 @@ import DatabaseController       from './Controllers/DatabaseController';
 import SchemaCache              from './Controllers/SchemaCache';
 import ParsePushAdapter         from 'parse-server-push-adapter';
 import MongoStorageAdapter      from './Adapters/Storage/Mongo/MongoStorageAdapter';
+import CouchStorageAdapter      from './Adapters/Storage/Couch/CouchStorageAdapter';
 import PostgresStorageAdapter   from './Adapters/Storage/Postgres/PostgresStorageAdapter';
 
 import { ParseServerRESTController } from './ParseServerRESTController';
@@ -307,18 +308,25 @@ class ParseServer {
       protocol = parsedURI.protocol ? parsedURI.protocol.toLowerCase() : null;
     } catch(e) { /* */ }
     switch (protocol) {
-    case 'postgres:':
-      return new PostgresStorageAdapter({
-        uri: databaseURI,
-        collectionPrefix,
-        databaseOptions
-      });
-    default:
-      return new MongoStorageAdapter({
-        uri: databaseURI,
-        collectionPrefix,
-        mongoOptions: databaseOptions,
-      });
+      case 'couch:':
+      case 'couchs:':
+        return new CouchStorageAdapter({
+          uri: databaseURI.replace('couch', 'http'),
+          collectionPrefix,
+          databaseOptions
+        });
+      case 'postgres:':
+        return new PostgresStorageAdapter({
+          uri: databaseURI,
+          collectionPrefix,
+          databaseOptions
+        });
+      default:
+        return new MongoStorageAdapter({
+          uri: databaseURI,
+          collectionPrefix,
+          mongoOptions: databaseOptions,
+        });
     }
   }
 
