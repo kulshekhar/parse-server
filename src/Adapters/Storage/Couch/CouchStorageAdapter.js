@@ -33,7 +33,7 @@ export class CouchStorageAdapter {
     schema.fields._rev = { type: 'String' };
 
     return this._client.createClass(Object.assign({}, schema, {
-      $t: '_SCHEMA',
+      t$: '_SCHEMA',
       isParseClass: true
     }))
       .then(() => toParseSchema(schema));
@@ -99,7 +99,7 @@ export class CouchStorageAdapter {
       });
 
     const selector = {
-      $t: className,
+      t$: className,
       '$or': fieldNames ? fieldNames.map(f => {
         const obj = {};
         obj[f] = { '$gt': null }
@@ -198,7 +198,7 @@ export class CouchStorageAdapter {
     // });
 
     object._id = object.objectId;
-    object.$t = className;
+    object.t$ = className;
     return this._client.create(object)
       .then(() => ({ ops: [object] }));
   }
@@ -244,7 +244,7 @@ export class CouchStorageAdapter {
 
     const selector = {
       selector: Object.assign({}, query, {
-        $t: className
+        t$: className
       })
     }
 
@@ -285,7 +285,7 @@ export class CouchStorageAdapter {
 
     const selector = {
       selector: Object.assign({}, query, {
-        $t: className
+        t$: className
       })
     };
     skip = intOrNull(skip);
@@ -470,7 +470,7 @@ const defaultCLPS = Object.freeze({
 });
 
 function toParseSchema(schema) {
-  if (schema.$t === '_User') {
+  if (schema.t$ === '_User') {
     delete schema._hashed_password;
     delete schema.hashed_password;
   }

@@ -77,7 +77,7 @@ class CouchClient {
   all(type, limit) {
     return this._makeHTTPRequest('/_find', 'POST', {
       selector: {
-        $t: {
+        t$: {
           '$eq': type
         }
       },
@@ -91,7 +91,7 @@ class CouchClient {
   }
 
   update(doc) {
-    return this._makeHTTPRequest('/${doc._id}', 'PUT', doc);
+    return this._makeHTTPRequest(`/${doc._id}`, 'PUT', doc);
   }
 
   bulkUpdate(docs) {
@@ -107,6 +107,10 @@ class CouchClient {
   }
 
   query(selector) {
+    console.log(JSON.stringify(selector.selector));
+    this.normalizeQuery(selector.selector);
+    console.log(JSON.stringify(selector.selector));
+
     return this._makeHTTPRequest('/_find', 'POST', selector)
       .then(res => {
         if (res.warning) {
@@ -117,7 +121,7 @@ class CouchClient {
       })
       .then(res => {
         console.log('***********', JSON.stringify(selector), res);
-        if (selector.selector && selector.selector.$t === '_User') {
+        if (selector.selector && selector.selector.t$ === '_User') {
           if (res.hashed_password) {
             res._hashed_password = res.hashed_password;
             delete res.hashed_password;
@@ -164,7 +168,7 @@ class CouchClient {
   deleteClass(className) {
     const p1 = this.query({
       selector: {
-        $t: className
+        t$: className
       },
       fields: ['_id', '_rev']
     }).then(res => {
@@ -224,6 +228,23 @@ class CouchClient {
 
       req.end();
     });
+  }
+
+  normalizeQuery(o) {
+    if (o) {
+      for (const k in o) {
+        if (k === 'objectId' && typeof o[k] === 'string') {
+          o._id = o[k];
+          delete o[k];
+        } else if (o[k] instanceof Array) {
+          for (let i = 0; i < o[k].length; i++) {
+            this.normalizeQuery(o[k][i]);
+          }
+        } else if (typeof o[k] === 'object') {
+          this.normalizeQuery(o[k]);
+        }
+      }
+    }
   }
 }
 
