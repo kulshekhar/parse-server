@@ -107,9 +107,11 @@ class CouchClient {
   }
 
   query(selector) {
-    console.log(JSON.stringify(selector.selector));
-    this.normalizeQuery(selector.selector);
-    console.log(JSON.stringify(selector.selector));
+    console.log('Original: ', JSON.stringify(selector.selector));
+    const originalSelector = Object.assign({}, selector.selector)
+    this.normalizeQuery(originalSelector);
+    this.normalizeQuery(selector.selector, true);
+    console.log('Normalized: ', JSON.stringify(selector.selector));
 
     return this._makeHTTPRequest('/_find', 'POST', selector)
       .then(res => {
@@ -121,17 +123,33 @@ class CouchClient {
       })
       .then(res => {
         console.log('***********', JSON.stringify(selector), res);
-        if (selector.selector && selector.selector.t$ === '_User') {
-          if (res.hashed_password) {
-            res._hashed_password = res.hashed_password;
-            delete res.hashed_password;
-          } else if (res.docs) {
+
+        if (selector.selector.t$ === '_Session') {
+          if (res.docs && res.docs.length > 0) {
             res.docs.forEach(d => {
-              d._hashed_password = d.hashed_password;
-              delete d.hashed_password;
-            });
+              d.user = { "__type": "Pointer", "className": "_User", "objectId": d.user, "_id": d.user }
+            })
           }
         }
+
+        if (res.hashed_password) {
+          res._hashed_password = res.hashed_password;
+          delete res.hashed_password;
+        } else if (res.docs) {
+          res.docs.forEach(d => {
+            d._hashed_password = d.hashed_password;
+            for (const k in originalSelector) {
+              if (originalSelector[k].__type === 'Pointer' && typeof d[k] === 'string') {
+                console.log(k, originalSelector[k].__type, d[k], originalSelector[k]);
+                d[k] = originalSelector[k];
+              }
+            }
+            delete d.hashed_password;
+          });
+        }
+
+        console.log('========', selector, JSON.stringify(res));
+
         return res;
       })
       .then(res => res.length >= 0 || res.error || res.docs ? res : [res]);
@@ -230,18 +248,24 @@ class CouchClient {
     });
   }
 
-  normalizeQuery(o) {
+  normalizeQuery(o, pointer) {
     if (o) {
       for (const k in o) {
         if (k === 'objectId' && typeof o[k] === 'string') {
           o._id = o[k];
-          delete o[k];
+          // delete o[k];
         } else if (o[k] instanceof Array) {
           for (let i = 0; i < o[k].length; i++) {
-            this.normalizeQuery(o[k][i]);
+            this.normalizeQuery(o[k][i], pointer);
           }
         } else if (typeof o[k] === 'object') {
-          this.normalizeQuery(o[k]);
+          if (pointer && o[k] && o[k].__type === 'Pointer') {
+            console.log('(((((((())))))))', k);
+            o[k] = o[k].objectId;
+            console.log('(((((((())))))))', o[k]);
+          } else {
+            this.normalizeQuery(o[k], pointer);
+          }
         }
       }
     }

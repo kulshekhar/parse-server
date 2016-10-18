@@ -495,7 +495,7 @@ function normalizePermissionSelectors(selector) {
   const normalizePermission = (key) => {
     if (selector && selector[key] && selector[key].$in && selector[key].$in.indexOf('*') >= 0) {
       const obj1 = {};
-      obj1[key] = null;
+      obj1[key] = { $exists: false };
       const obj2 = {};
       obj2[key] = selector[key];
       selector.$or = [
