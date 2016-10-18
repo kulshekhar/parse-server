@@ -4,6 +4,11 @@ const url = require('url');
 
 const logger = require('../../../logger');
 
+const remappedFields = Object.freeze({
+  wperm: '_wperm',
+  rperm: '_rperm',
+});
+
 let h;
 
 export function createClient(uri, databaseOptions) {
@@ -124,19 +129,23 @@ class CouchClient {
       })
       .then(res => {
 
-        if (selector.selector.t$ === '_Session') {
-          if (res.docs && res.docs.length > 0) {
-            res.docs.forEach(d => {
-              d.user = { "__type": "Pointer", "className": "_User", "objectId": d.user, "_id": d.user }
-            })
-          }
-        }
-
         if (res.hashed_password) {
           res._hashed_password = res.hashed_password;
           delete res.hashed_password;
         } else if (res.docs) {
           res.docs.forEach(d => {
+
+            if (selector.selector.t$ === '_Session') {
+              d.user = { "__type": "Pointer", "className": "_User", "objectId": d.user, "_id": d.user }
+            }
+
+            for (const r in remappedFields) {
+              if (d[r]) {
+                d[remappedFields[r]] = d[r];
+                delete d[r]
+              }
+            }
+
             d._hashed_password = d.hashed_password;
             for (const k in originalSelector) {
               if (originalSelector[k].__type === 'Pointer' && typeof d[k] === 'string') {
@@ -144,6 +153,7 @@ class CouchClient {
               }
             }
             delete d.hashed_password;
+
           });
         }
 
