@@ -493,16 +493,21 @@ function toParseSchema(schema) {
 
 function normalizePermissionSelectors(selector) {
   const normalizePermission = (key) => {
-    if (selector && selector[key] && selector[key].$in && selector[key].$in.indexOf('*') >= 0) {
-      const obj1 = {};
-      obj1[key] = { $exists: false };
-      const obj2 = {};
-      obj2[key] = selector[key];
-      selector.$or = [
-        obj1,
-        obj2
-      ];
-      delete selector[key];
+    if (selector && selector[key] && selector[key].$in) {
+      
+      selector[key].$in = (selector[key].$in instanceof Array) ? selector[key].$in.filter(v => v !== null) : [];
+
+      if (selector[key].$in.indexOf('*') >= 0) {
+        const obj1 = {};
+        obj1[key] = { $exists: false };
+        const obj2 = {};
+        obj2[key] = selector[key];
+        selector.$or = [
+          obj1,
+          obj2
+        ];
+        delete selector[key];
+      }
     }
   };
 
