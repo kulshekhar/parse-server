@@ -130,7 +130,7 @@ export class CouchStorageAdapter {
     debug('getAllClasses');
     return this._ensureSchemaCollectionExists()
       .then(() => this._client.all('_SCHEMA'))
-      .then(schemas => schemas.map(toParseSchema));
+      .then(schemas => schemas ? schemas.map(toParseSchema) : []);
   }
 
   // Return a promise for the schema with the given name, in Parse format. If

@@ -40,8 +40,8 @@ export function normalizePerms(object) {
   return object;
 }
 
-// Key:tlynimsemserearnothatful
-// Password:56c64239779b16c3fd1db5afc309139883faa192
+// Key:bledintessoldnedesseders
+// Password:3dbab749f9d83d7b22795774286b30ebaceb04ef
 
 // Url {
 //   protocol: 'http:',
@@ -116,6 +116,7 @@ class CouchClient {
         return res;
       })
       .then(res => {
+        console.log('***********', JSON.stringify(selector), res);
         if (selector.selector && selector.selector.$t === '_User') {
           if (res.hashed_password) {
             res._hashed_password = res.hashed_password;
@@ -134,13 +135,18 @@ class CouchClient {
 
   create(doc) {
     doc = normalizePerms(doc);
-    return this._makeHTTPRequest('', 'POST', doc);
+    return this._makeHTTPRequest('', 'POST', doc)
+      .then(res => {
+        console.log(res);
+        return res;
+      });
   }
 
   createClass(doc) {
     const id = `class:${doc.className}`;
     return this._makeHTTPRequest(`/${id}`, 'PUT', doc)
       .then(res => {
+        console.log(res);
         if (res.error === 'conflict') {
           return doc;
         }
