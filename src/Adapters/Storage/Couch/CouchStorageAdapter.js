@@ -318,6 +318,8 @@ export class CouchStorageAdapter {
       selector.fields = keys;
     }
 
+    selector.selector = normalizePermissionSelectors(selector.selector);
+
     return this._client.query(selector)
       .then(results => {
         if (results.error) {
@@ -487,6 +489,27 @@ function toParseSchema(schema) {
     fields: schema.fields,
     classLevelPermissions: clps,
   };
+}
+
+function normalizePermissionSelectors(selector) {
+  const normalizePermission = (key) => {
+    if (selector && selector[key] && selector[key].$in && selector[key].$in.indexOf('*') >= 0) {
+      const obj1 = {};
+      obj1[key] = null;
+      const obj2 = {};
+      obj2[key] = selector[key];
+      selector.$or = [
+        obj1,
+        obj2
+      ];
+      delete selector[key];
+    }
+  };
+
+  normalizePermission('rperm');
+  normalizePermission('wperm');
+
+  return selector;
 }
 
 function intOrNull(v) {
