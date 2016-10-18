@@ -1,6 +1,9 @@
 const http = require('http');
 const https = require('https');
 const url = require('url');
+
+const logger = require('../../../logger');
+
 let h;
 
 export function createClient(uri, databaseOptions) {
@@ -107,22 +110,19 @@ class CouchClient {
   }
 
   query(selector) {
-    console.log('Original: ', JSON.stringify(selector.selector));
     const originalSelector = Object.assign({}, selector.selector)
     this.normalizeQuery(originalSelector);
     this.normalizeQuery(selector.selector, true);
-    console.log('Normalized: ', JSON.stringify(selector.selector));
 
     return this._makeHTTPRequest('/_find', 'POST', selector)
       .then(res => {
         if (res.warning) {
-          console.log(res.warning);
-          console.log('Selector used: ', selector);
+          console.error(res.warning);
+          console.error('Selector used: ', selector);
         }
         return res;
       })
       .then(res => {
-        console.log('***********', JSON.stringify(selector), res);
 
         if (selector.selector.t$ === '_Session') {
           if (res.docs && res.docs.length > 0) {
@@ -140,15 +140,12 @@ class CouchClient {
             d._hashed_password = d.hashed_password;
             for (const k in originalSelector) {
               if (originalSelector[k].__type === 'Pointer' && typeof d[k] === 'string') {
-                console.log(k, originalSelector[k].__type, d[k], originalSelector[k]);
                 d[k] = originalSelector[k];
               }
             }
             delete d.hashed_password;
           });
         }
-
-        console.log('========', selector, JSON.stringify(res));
 
         return res;
       })
@@ -159,7 +156,7 @@ class CouchClient {
     doc = normalizePerms(doc);
     return this._makeHTTPRequest('', 'POST', doc)
       .then(res => {
-        console.log(res);
+        debug(res);
         return res;
       });
   }
@@ -168,7 +165,7 @@ class CouchClient {
     const id = `class:${doc.className}`;
     return this._makeHTTPRequest(`/${id}`, 'PUT', doc)
       .then(res => {
-        console.log(res);
+        debug(res);
         if (res.error === 'conflict') {
           return doc;
         }
@@ -260,9 +257,7 @@ class CouchClient {
           }
         } else if (typeof o[k] === 'object') {
           if (pointer && o[k] && o[k].__type === 'Pointer') {
-            console.log('(((((((())))))))', k);
             o[k] = o[k].objectId;
-            console.log('(((((((())))))))', o[k]);
           } else {
             this.normalizeQuery(o[k], pointer);
           }
@@ -272,3 +267,9 @@ class CouchClient {
   }
 }
 
+const debug = function () {
+  let args = [...arguments];
+  args = ['PG: ' + arguments[0]].concat(args.slice(1, args.length));
+  let log = logger.getLogger();
+  log.debug.apply(log, args);
+}
