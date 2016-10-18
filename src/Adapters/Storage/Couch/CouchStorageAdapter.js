@@ -331,7 +331,7 @@ export class CouchStorageAdapter {
         return results.map(object => {
           Object.keys(schema.fields).forEach(fieldName => {
             if (schema.fields[fieldName].type === 'Pointer' && object[fieldName]) {
-              object[fieldName] = { objectId: object[fieldName], __type: 'Pointer', className: schema.fields[fieldName].targetClass };
+              // object[fieldName] = { objectId: object[fieldName], __type: 'Pointer', className: schema.fields[fieldName].targetClass };
             }
             if (schema.fields[fieldName].type === 'Relation') {
               object[fieldName] = {
