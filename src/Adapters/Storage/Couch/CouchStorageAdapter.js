@@ -232,6 +232,7 @@ export class CouchStorageAdapter {
     debug('findOneAndUpdate', className, query, update);
 
     query = normalizePerms(query);
+    update = normalizePerms(update);
 
     return this._client.updateById(query.objectId, update);
   }
@@ -241,6 +242,7 @@ export class CouchStorageAdapter {
     debug('updateObjectsByQuery', className, query, update);
 
     query = normalizePerms(query);
+    update = normalizePerms(update);
 
     const selector = {
       selector: Object.assign({}, query, {
@@ -494,7 +496,7 @@ function toParseSchema(schema) {
 function normalizePermissionSelectors(selector) {
   const normalizePermission = (key) => {
     if (selector && selector[key] && selector[key].$in) {
-      
+
       selector[key].$in = (selector[key].$in instanceof Array) ? selector[key].$in.filter(v => v !== null) : [];
 
       if (selector[key].$in.indexOf('*') >= 0) {
