@@ -37,7 +37,7 @@ const RedisCacheAdapter = require('../src/Adapters/Cache/RedisCacheAdapter').def
 
 const mongoURI = 'mongodb://localhost:27017/parseServerMongoAdapterTestDatabase';
 const postgresURI = 'postgres://localhost:5432/parse_server_postgres_adapter_test_database';
-const couchURI = 'couch://localhost:5984/parse-test';
+const couchURI = 'http://localhost:5984/parse-test';
 let databaseAdapter;
 // need to bind for mocking mocha
 
