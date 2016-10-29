@@ -32,10 +32,12 @@ var MongoStorageAdapter = require('../src/Adapters/Storage/Mongo/MongoStorageAda
 const GridStoreAdapter = require('../src/Adapters/Files/GridStoreAdapter').GridStoreAdapter;
 const FSAdapter = require('parse-server-fs-adapter');
 const PostgresStorageAdapter = require('../src/Adapters/Storage/Postgres/PostgresStorageAdapter');
+const CouchStorageAdapter = require('../src/Adapters/Storage/Couch/CouchStorageAdapter');
 const RedisCacheAdapter = require('../src/Adapters/Cache/RedisCacheAdapter').default;
 
 const mongoURI = 'mongodb://localhost:27017/parseServerMongoAdapterTestDatabase';
 const postgresURI = 'postgres://localhost:5432/parse_server_postgres_adapter_test_database';
+const couchURI = 'couch://localhost:5984/parse-test';
 let databaseAdapter;
 // need to bind for mocking mocha
 
@@ -45,6 +47,11 @@ let stopDB = () => {};
 if (process.env.PARSE_SERVER_TEST_DB === 'postgres') {
   databaseAdapter = new PostgresStorageAdapter({
     uri: process.env.PARSE_SERVER_TEST_DATABASE_URI || postgresURI,
+    collectionPrefix: 'test_',
+  });
+} else if (process.env.PARSE_SERVER_TEST_DB === 'couch') {
+  databaseAdapter = new CouchStorageAdapter({
+    uri: process.env.PARSE_SERVER_TEST_DATABASE_URI || couchURI,
     collectionPrefix: 'test_',
   });
 } else {
