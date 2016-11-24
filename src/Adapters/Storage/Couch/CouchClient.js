@@ -218,10 +218,13 @@ class CouchClient {
     return this._makeHTTPRequest('/_all_docs', 'GET')
       .then(res => {
         if (res.rows.length > 0) {
-          res.rows.forEach(r => {
-            r._deleted = true;
-          });
-          return this.bulkUpdate({ docs: res.rows });
+          const newRows = res.rows.map(r => ({
+            _id: r.id,
+            _rev: r.value.rev,
+            _deleted: true,
+          }));
+
+          return this.bulkUpdate({ docs: newRows });
         }
         return;
       });
